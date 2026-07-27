@@ -14,6 +14,121 @@
 extern "C" {
 #endif
 
+#ifndef MAX_ERROR_MESSAGE_LENGTH_BYTES
+#define MAX_ERROR_MESSAGE_LENGTH_BYTES 100
+#endif
+#ifndef END_OF_COMMON_ERRORS
+#define END_OF_COMMON_ERRORS                                              0x0020
+#endif
+
+#ifndef COMMON_ERROR_CODES
+#define COMMON_ERROR_CODES
+#ifdef ERROR_NONE
+#undef ERROR_NONE
+#endif
+/** Enumeration of Common Error Codes These are always going to be the first error 
+ * codes of every Errorcode Enumeration */
+typedef enum 
+{
+    ERROR_NONE                = 0x0000, /* No error */
+    ERROR_INVALID_PARAMETER   = 0x0001, /* Invalid parameter */
+    ERROR_OUT_OF_MEMORY       = 0x0002, /* Out of memory */
+    ERROR_BUFFER_OVERFLOW     = 0x0003, /* Buffer overflow */
+    ERROR_BUFFER_UNDERFLOW    = 0x0004, /* Buffer underflow */
+    ERROR_NULL_POINTER        = 0x0005, /* Null pointer */
+    ERROR_INVALID_STATE       = 0x0006, /* Invalid state */
+    ERROR_TIMEOUT             = 0x0007, /* Timeout */
+    ERROR_NOT_IMPLEMENTED     = 0x0008, /* Not implemented */
+    ERROR_UNKNOWN             = 0x0009, /* Unknown error */
+    ERROR_UNINITIALIZED       = 0x000A, /* Uninitialized */
+    ERROR_ALREADY_INITIALIZED = 0x000B, /* Object previously been initialized.*/ 
+    LAST_COMMON_ERROR_CODE,
+} eCommonErrorCodes_t;
+#endif
+
+#ifndef SCOMMON_ERROR_COMPACT
+#define SCOMMON_ERROR_COMPACT
+
+/**
+ * @brief Compact structure for storing error information.
+ *  Needs to be 32 bit aligned and packed to 1 byte to ensure that it is compact and can be stored in a circular buffer.
+ */
+#pragma pack( push, 1 )
+typedef struct 
+{
+    union {
+        struct         
+        {
+            /* data */
+            uint16_t _errorCode; /* The error code for this error */
+            uint16_t _fileModuleEnum; /* The file module enum where the error occurred */
+        };
+        uint32_t _errorDetails; /* Combined error code and file module enum for compact storage */
+    };
+    uint16_t _lineNumber; /* The line number where the error occurred */
+    uint8_t  _flags; /* Whether or not this error info is valid */
+    uint8_t  _reserved[7]; /* Reserved for future use */
+    uint16_t _Unused16; /* Currently unused, reserved for future use */
+    uint16_t _crc16; /* CRC16 of the error info for integrity checking */
+} sErrorCompact_t;
+
+#ifndef BLANK_ERROR_STRUCT
+#define BLANK_ERROR_STRUCT { \
+    ._errorCode = ERROR_NONE, \
+    ._fileModuleEnum = 0U, \
+    ._lineNumber = 0, \
+    ._flags = 0, \
+    ._reserved = { 0 }, \
+    ._Unused16 = 0, \
+    ._crc16 = 0 \
+} 
+#endif
+#pragma pack( pop )
+#endif
+#ifndef SERROR_CODE_MESSAGE_PAIR
+#define SERROR_CODE_MESSAGE_PAIR
+/** 
+ * @brief Structure that contains an error code and its corresponding message.
+ */
+typedef struct
+{
+    uint16_t _errorCode; /* The error code */
+    char _errorMessage[ MAX_ERROR_MESSAGE_LENGTH_BYTES ]; /* The corresponding error message */  
+} sErrorCodeMessagePair_t;
+#endif // SERROR_CODE_MESSAGE_PAIR
+
+#ifndef SCOMMON_LOG_CALLBACK
+#define SCOMMON_LOG_CALLBACK
+typedef enum
+{
+    LOGGING_TYPE_CRITICAL= 0U,
+    LOGGING_TYPE_ERROR   = 1U,
+    LOGGING_TYPE_WARNING = 2U,
+    LOGGING_TYPE_INFO    = 3U,
+    LOGGING_TYPE_DEBUG   = 4U
+} eLoggingType_t;
+
+
+/**
+ * @brief Function pointer type for a log callback function.
+ * @param logLevel The log level of the message.
+ * @param message The log message.
+ */ 
+typedef sErrorCompact_t (*logCallback_t)(uint16_t moduleId,
+                                         uint16_t line,
+                                         eLoggingType_t type,
+                                         const char *message, ...);
+#endif // SCOMMON_LOG_CALLBACK
+#ifndef SCOMMON_CREATE_ERROR_CALLBACK
+#define SCOMMON_CREATE_ERROR_CALLBACK
+typedef sErrorCompact_t (*createErrorCallback_t)( uint16_t errorCode, 
+                                                  uint16_t fileModuleEnum, 
+                                                  uint16_t lineNumber,
+                                                  bool autoStoreError,
+                                                  uint8_t const * const errorMessage, 
+                                                  uint8_t const * const moduleName );
+#endif
+
 #ifndef SCOMMON_DRIVER_CONTROL
 #define SCOMMON_DRIVER_CONTROL
 /**
