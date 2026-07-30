@@ -4,12 +4,13 @@
  * @author Anthony Garza
  * @copyright All rights reserved 2026
 *************************************************/
-#ifndef COMMON_TYPES_H
-#define COMMON_TYPES_H
-
 #include <stddef.h>
 #include <stdint.h>
 #include <stdbool.h>
+#ifndef COMMON_TYPES_H
+#define COMMON_TYPES_H
+
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -127,7 +128,58 @@ typedef sErrorCompact_t (*createErrorCallback_t)( uint16_t errorCode,
                                                   bool autoStoreError,
                                                   uint8_t const * const errorMessage, 
                                                   uint8_t const * const moduleName );
-#endif
+#endif // SCOMMON_CREATE_ERROR_CALLBACK
+#ifndef SCOMMON_CRC_16
+#define SCOMMON_CRC_16
+/**
+ * @brief Structure that contains the configuration for CRC16 calculation.
+ */
+typedef struct
+{
+    uint16_t poly;
+    uint16_t init;
+    uint16_t xorOut;
+    bool reflectIn;
+    bool reflectOut;
+} sCRC16Config_t;
+/*
+ *   CCITT-FALSE: 0x1021, 0xFFFF, 0x0000, false, false -> 0x29B1
+ *   KERMIT:      0x1021, 0x0000, 0x0000, true,  true  -> 0x2189
+ *   X-25:        0x1021, 0xFFFF, 0xFFFF, true,  true  -> 0x906E
+ *   MODBUS:      0x8005, 0xFFFF, 0x0000, true,  true  -> 0x4B37
+ *   XMODEM:      0x1021, 0x0000, 0x0000, false, false -> 0x31C3
+ */
+typedef enum
+{
+    CRC_16_MODBUS_POLY = 0x8005,
+    CRC_16_XMODEM_POLY = 0x1021
+} eCRCPolynomial_t;
+#define CRC_16_SEED                                                       0xFFFF
+#define CRC_16_XOROUT                                                     0x0000
+#define CRC_16_INPUT_REFLECTED                                              FALSE
+#define CRC_16_OUTPUT_REFLECTED                                             FALSE
+
+#define DEFAULT_CRC16_CONFIG { .poly = CRC_16_MODBUS_POLY, \
+                             .init = CRC_16_SEED, \
+                             .xorOut = CRC_16_XOROUT, \
+                             .reflectIn = CRC_16_INPUT_REFLECTED, \
+                             .reflectOut = CRC_16_OUTPUT_REFLECTED }
+
+/**
+ * @brief Function to calculate the CRC16 of a given buffer.
+ * @note if the project is compiled as an embedded optimized build,
+ * this function will always just call the embedded function with the CCITT-FALSE values.
+ * @param config The CRC16 configuration to use.
+ * @param buffer Pointer to the buffer to calculate the CRC16 of.
+ * @param length The length of the buffer in bytes.
+ * @returns The CRC16 of the buffer.
+ */
+typedef uint16_t (*calculateCRC16FunctionPtr_t)( sCRC16Config_t config, 
+                                                 uint8_t const * const buffer,
+                                                 uint16_t const length );
+
+
+#endif // SCOMMON_CRC_16
 
 #ifndef SCOMMON_DRIVER_CONTROL
 #define SCOMMON_DRIVER_CONTROL
