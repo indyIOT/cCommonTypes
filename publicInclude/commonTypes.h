@@ -175,8 +175,8 @@ typedef enum
  * @returns The CRC16 of the buffer.
  */
 typedef uint16_t (*calculateCRC16FunctionPtr_t)( sCRC16Config_t config, 
-                                                 uint8_t const * const buffer,
-                                                 uint16_t const length );
+                                                 void const * const buffer,
+                                                 size_t const length );
 
 
 #endif // SCOMMON_CRC_16
@@ -239,7 +239,7 @@ typedef struct
 {
     uint8_t const * const _moduleName; /* Name of the module */
     uint8_t const * const _moduleVersionString; /* Version string of the module */
-    uint16_t _moduleID; /* ID of the module */
+    uint16_t const _moduleID; /* ID of the module */
     sCommonVersionStruct_t const _moduleVersion; /* Version of the module */
     bool _isInitialized; /* Whether or not the driver has been initialized */
 } sCommonDriverInfoStruct_t;
