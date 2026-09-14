@@ -120,6 +120,8 @@ typedef sErrorCompact_t (*logCallback_t)(uint16_t moduleId,
                                          eLoggingType_t type,
                                          const char *message, ...);
 #endif // SCOMMON_LOG_CALLBACK
+
+
 #ifndef SCOMMON_CREATE_ERROR_CALLBACK
 #define SCOMMON_CREATE_ERROR_CALLBACK
 typedef sErrorCompact_t (*createErrorCallback_t)( uint16_t errorCode, 
@@ -172,14 +174,43 @@ typedef enum
  * @param config The CRC16 configuration to use.
  * @param buffer Pointer to the buffer to calculate the CRC16 of.
  * @param length The length of the buffer in bytes.
- * @returns The CRC16 of the buffer.
+ * @param crc16Value Pointer to the location where the calculated CRC16 value will be stored.
+ * @returns The error code indicating the success or failure of the operation.
  */
-typedef uint16_t (*calculateCRC16FunctionPtr_t)( sCRC16Config_t config, 
-                                                 void const * const buffer,
-                                                 size_t const length );
+typedef sErrorCompact_t (*calculateCRC16FunctionPtr_t)( sCRC16Config_t const * const config, 
+                                                        void const * const buffer,
+                                                        size_t const length,
+                                                        uint16_t * const crc16Value );
 
 
 #endif // SCOMMON_CRC_16
+
+#ifndef SCOMMON_SHA_256
+#define SCOMMON_SHA_256
+/** @brief Number of bytes in a SHA-256 digest (256 bits / 8 bits-per-byte). */
+#define SHA_256_DIGEST_LENGTH_BYTES                                             32
+
+/**
+ * @brief Structure that holds the result of a SHA-256 calculation.
+ * @note Wrapped in a struct (instead of an out-parameter) so calculateSHA256FunctionPtr_t
+ *       can follow the same "buffer + length in, value out" shape.
+ * 
+ */
+typedef struct
+{
+    uint8_t digest[SHA_256_DIGEST_LENGTH_BYTES];
+} sSHA256Digest_t;
+
+/**
+ * @brief Function pointer type for a SHA-256 calculation function.
+ * @param buffer Pointer to the buffer to calculate the SHA-256 digest of.
+ * @param length The length of the buffer in bytes.
+ * @returns The calculated SHA-256 digest.
+ */
+typedef sSHA256Digest_t (*calculateSHA256FunctionPtr_t)( void const * const buffer,
+                                                         size_t const length );
+
+#endif // SCOMMON_SHA_256
 
 #ifndef SCOMMON_DRIVER_CONTROL
 #define SCOMMON_DRIVER_CONTROL
