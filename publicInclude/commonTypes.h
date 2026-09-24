@@ -49,7 +49,12 @@ typedef enum
 
 #ifndef SCOMMON_ERROR_COMPACT
 #define SCOMMON_ERROR_COMPACT
-
+/* sErrorCompact_t is forced to this alignment (and, as a consequence, padded so its
+ * size is a multiple of it too -- see cErrorDriverPub.h's comment on sErrorCompact_t
+ * for why).  */
+#ifndef ERROR_STRUCT_ALIGNMENT_BYTES
+#define ERROR_STRUCT_ALIGNMENT_BYTES                                        4
+#endif
 /**
  * @brief Compact structure for storing error information.
  *  Needs to be 32 bit aligned and packed to 1 byte to ensure that it is compact and can be stored in a circular buffer.
@@ -71,6 +76,10 @@ typedef struct
     uint8_t  _reserved[3]; /* Reserved for future use */
     uint16_t _crc16; /* CRC16 of the error info for integrity checking */
 } sErrorCompact_t;
+#pragma pack( pop )
+AG_STATIC_ASSERT( ( sizeof( sErrorCompact_t ) % ERROR_STRUCT_ALIGNMENT_BYTES ) == 0,
+                  "sErrorCompact_t must be padded to a multiple of ERROR_STRUCT_ALIGNMENT_BYTES" );
+
 
 #ifndef BLANK_ERROR_STRUCT
 #define BLANK_ERROR_STRUCT { \
@@ -82,7 +91,7 @@ typedef struct
     ._crc16 = 0 \
 } 
 #endif
-#pragma pack( pop )
+
 #endif
 #ifndef SERROR_CODE_MESSAGE_PAIR
 #define SERROR_CODE_MESSAGE_PAIR
@@ -333,6 +342,8 @@ typedef uint16_t (*writeMemoryFunctionPtr_t)( uint32_t const address,
                                               size_t const lengthSizeBytes,
                                               bool const verifyWrite );
 #endif // SCOMMON_MEMORY_FUNCTIONS
+
+ 
 #ifdef __cplusplus
 }
 #endif
